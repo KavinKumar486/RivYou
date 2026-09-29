@@ -4,6 +4,25 @@ Discover, verify, and extract structured data for Indian Shopify stores using th
 independent discovery channels. Every accepted store has publicly observable evidence;
 every rejected one has a recorded reason.
 
+**Public repo:** [https://github.com/KavinKumar486/RivYou](https://github.com/KavinKumar486/RivYou)
+
+---
+
+## Results (what to open first)
+
+| What | Link |
+|------|------|
+| **Primary result (CSV, one row per verified Indian Shopify store)** | [`data/stores_verified.csv`](https://github.com/KavinKumar486/RivYou/blob/master/data/stores_verified.csv) |
+| Same data as JSON | [`data/stores_verified.json`](https://github.com/KavinKumar486/RivYou/blob/master/data/stores_verified.json) |
+| India `needs_review` | [`data/needs_review.csv`](https://github.com/KavinKumar486/RivYou/blob/master/data/needs_review.csv) |
+| Shopify hits rejected as not Indian | [`data/rejected.csv`](https://github.com/KavinKumar486/RivYou/blob/master/data/rejected.csv) |
+
+**83 stores** in the primary file. Columns: `domain`, `category`, `tagline`, `logo_url`, `contacts`, `socials`, `state` (plus method / status fields).
+
+**Method (short):** Candidates from Common Crawl CDX (`*.myshopify.com` and `.in` commerce paths) plus a curated Indian D2C list. Shopify confirmed with `/products.json`, `/cart.js`, Shopify JS/CDN/headers — not TLD. India required business-location evidence (GSTIN, PIN, or address); `.in` or INR alone was rejected. The seven fields were parsed from public HTML / JSON-LD.
+
+**Time:** ~14h build + this production slice (seed minutes; Shopify verify capped at 3,000 stores ~40 min; India verify on 1,658 hits ~1–2 h; extract on 83 stores a few minutes).
+
 ---
 
 ## Definition of "Indian"
@@ -422,15 +441,13 @@ requirements.txt    pinned dependencies
 
 ## Submission Note
 
-This pipeline discovers Indian Shopify stores by seeding candidates from three independent
-sources (Tranco `.in` domains, curated D2C lists, Common Crawl CDX), then independently
-verifying Shopify presence (5 evidence families, ≥1 high-specificity required) and Indian
-operation (business-location evidence required — GSTIN, PIN code, or address context —
-commerce signals alone do not qualify). Every accepted store has a recorded evidence trail;
-every rejected one has a reason. The full pipeline is tested with 88 fixture-based unit tests
-that require no network access.
+Candidates: Common Crawl CDX (`*.myshopify.com` + `.in` e-commerce URL paths) and a curated
+Indian D2C list. Shopify: five evidence families; verified only if ≥2 families fire and at
+least one is high-specificity (`/products.json` or Shopify JS). India: business-location
+evidence required (GSTIN, PIN in address context, or city/state near office/address copy);
+`.in` TLD or INR/UPI alone is not enough. Extraction: public homepage/about/contact HTML
+and `/products.json` (contacts, socials, category, tagline, logo, state).
 
-**Output files:** `data/stores_verified.csv`, `data/stores_verified.json`
-(partial run — see VERIFICATION_REPORT.md for full run status)
-
-**Repo:** all source code in this directory; `python -m pytest -q` passes in <1s.
+**Repo:** https://github.com/KavinKumar486/RivYou  
+**Result file:** [`data/stores_verified.csv`](https://github.com/KavinKumar486/RivYou/blob/master/data/stores_verified.csv) (83 rows; JSON twin: `data/stores_verified.json`)  
+**Runtime this slice:** seed ~2 min, Shopify to 3,000 stores ~40 min, India on 1,658 ~1–2 h, extract minutes. Pipeline development ~14h.
