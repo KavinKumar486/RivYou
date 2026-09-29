@@ -163,24 +163,27 @@ async def cmd_verify_shopify(args) -> None:
             nonlocal verified, uncertain, rejected, inconclusive, done
 
             async with domain_sem:
-                result = await verify(fetcher, domain)
-                verdict = result["verdict"]
-                is_shopify = verdict == "verified"
-                inc = result["inconclusive"]
+                try:
+                    result = await verify(fetcher, domain)
+                    verdict = result["verdict"]
+                    is_shopify = verdict == "verified"
+                    inc = result["inconclusive"]
 
-                await storage.save_store_verification(
-                    domain=domain,
-                    is_shopify=is_shopify,
-                    is_india=None,
-                    inconclusive=inc,
-                    shopify_verdict=verdict,
-                    evidence={"shopify": result["evidence"]},
-                )
+                    await storage.save_store_verification(
+                        domain=domain,
+                        is_shopify=is_shopify,
+                        is_india=None,
+                        inconclusive=inc,
+                        shopify_verdict=verdict,
+                        evidence={"shopify": result["evidence"]},
+                    )
 
-                if inc:              inconclusive += 1
-                elif verdict == "verified":   verified += 1
-                elif verdict == "uncertain":  uncertain += 1
-                else:                rejected += 1
+                    if inc:              inconclusive += 1
+                    elif verdict == "verified":   verified += 1
+                    elif verdict == "uncertain":  uncertain += 1
+                    else:                rejected += 1
+                except Exception:
+                    logger.exception("verify-shopify failed for %s", domain)
 
                 done += 1
                 if done % 50 == 0 or done == len(candidates):
