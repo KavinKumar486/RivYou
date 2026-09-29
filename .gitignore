@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# SQLite and WAL sidecars (tens–hundreds of MB; regenerate with cli.py)
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Fetched HTML bodies — this is almost all of the ~9 GB
+data/cache_bodies/
+spike/**/cache_bodies/
+spike/**/*.html
+spike/data/
+
+# Run logs
+*.log
+data/*.log
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

@@ -1,0 +1,4 @@
+{"products":[
+  {"id":1,"handle":"classic-tshirt","title":"Classic Cotton T-Shirt","product_type":"Apparel","tags":["fashion","clothing","tshirt"],"variants":[{"id":11,"price":"499.00"}]},
+  {"id":2,"handle":"summer-dress","title":"Summer Floral Dress","product_type":"Clothing","tags":["dress","women","fashion"],"variants":[{"id":12,"price":"999.00"}]}
+]}
