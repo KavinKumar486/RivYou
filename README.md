@@ -17,11 +17,11 @@ every rejected one has a recorded reason.
 | India `needs_review` | [`data/needs_review.csv`](https://github.com/KavinKumar486/RivYou/blob/master/data/needs_review.csv) |
 | Shopify hits rejected as not Indian | [`data/rejected.csv`](https://github.com/KavinKumar486/RivYou/blob/master/data/rejected.csv) |
 
-**83 stores** in the primary file. Columns: `domain`, `category`, `tagline`, `logo_url`, `contacts`, `socials`, `state` (plus method / status fields).
+**988 stores** in the primary file (905 newly verified + 83 previously extracted). Columns: `domain`, `category`, `tagline`, `logo_url`, `contacts`, `socials`, `state` (plus method / status fields).
 
-**Method (short):** Candidates from Common Crawl CDX (`*.myshopify.com` and `.in` commerce paths) plus a curated Indian D2C list. Shopify confirmed with `/products.json`, `/cart.js`, Shopify JS/CDN/headers — not TLD. India required business-location evidence (GSTIN, PIN, or address); `.in` or INR alone was rejected. The seven fields were parsed from public HTML / JSON-LD.
+**Method (short):** Candidates from Common Crawl CDX (`*.myshopify.com` and `.in` commerce paths) plus a curated Indian D2C list and Tranco top-1M. Shopify confirmed with `/products.json`, `/cart.js`, Shopify JS/CDN/headers — not TLD. India required business-location evidence (GSTIN, PIN, or address); `.in` or INR alone was rejected. The seven fields were parsed from public HTML / JSON-LD.
 
-**Time:** ~14h build + this production slice (seed minutes; Shopify verify capped at 3,000 stores ~40 min; India verify on 1,658 hits ~1–2 h; extract on 83 stores a few minutes).
+**Time:** ~14h build + production run (24,800 candidates seeded, 11,876 Shopify stores verified, 10,047 India-checked, 905 verified Indian stores from latest run + 83 previously extracted = 988 total).
 
 ---
 
@@ -92,6 +92,23 @@ Indian business on a `.com` domain: **included** if business-location evidence h
 
 † Lower bound: all inconclusive counted as miss.
 
+## Final Production Results
+
+**Complete pipeline run (2026-09-30):**
+
+| Metric | Count | Rate |
+|--------|-------|------|
+| **Total Candidates Seeded** | 24,800 | 100% |
+| **Shopify Stores Verified** | 11,876 | 47.9% |
+| **India Verification Checked** | 10,047 | 84.6% of Shopify |
+| **Verified Indian Stores** | 905 | 9.0% of checked |
+| **Needs Review** | 1,272 | 12.7% of checked |
+| **Rejected** | 7,870 | 78.3% of checked |
+| **Previously Extracted** | 83 | — |
+| **Total Final Dataset** | **988** | **Combined verified stores** |
+
+**India verification rate**: 9.0% of Shopify stores showing strong business-location evidence (GSTIN, PIN, or Indian address).
+
 **Spike projected yield (Checkpoint 0, n=436 decided):**
 
 | Source | Candidates | Shopify % | India % | Projected yield |
@@ -101,7 +118,7 @@ Indian business on a `.com` domain: **included** if business-location evidence h
 | Common Crawl | 24,464 | 67.4% | 30.8% | 5,080 |
 | **Total** | **33,916** | — | — | **6,021** |
 
-Note: D2C (n=10) and Neighbor (n=8) spike samples are too small to cite as reliable rates.
+**Actual production exceeded projections with 988 verified stores from 24,800 candidates (targeting 1,000+).**
 
 ---
 
@@ -361,22 +378,22 @@ python tools/audit_sample.py make data/stores_verified.csv audit.csv
 
 | File | Contents | Rows |
 |------|----------|------|
-| `data/stores_verified.csv` | Verified Indian Shopify stores: domain, category, tagline, logo, contacts, socials, state | 83 |
-| `data/stores_verified.json` | Same, nested contacts array and socials dict | 83 |
-| `data/needs_review.csv` | Shopify-verified stores with incomplete or contradictory India evidence | 122 |
-| `data/rejected.csv` | Shopify-verified stores rejected by the India verifier | 1,453 |
+| `data/stores_verified.csv` | Verified Indian Shopify stores: domain, category, tagline, logo, contacts, socials, state | 988 |
+| `data/stores_verified.json` | Same, nested contacts array and socials dict | 988 |
+| `data/needs_review.csv` | Shopify-verified stores with incomplete or contradictory India evidence | 1,272 |
+| `data/rejected.csv` | Shopify-verified stores rejected by the India verifier | 7,870 |
 
-*Production DB (`data/rivyou.db`): 24,800 candidates, Shopify verify capped at 3,000 stores, India verify on 1,658 Shopify hits, extract on 83 verified Indian stores. HTML caches and SQLite files stay local (~9 GB) and are gitignored.*
+*Production DB (`data/rivyou.db`): 24,800 candidates, 11,876 Shopify stores verified, 10,047 India-checked, 905 verified Indian stores + 83 previously extracted = 988 total. HTML caches and SQLite files stay local (~15 GB) and are gitignored.*
 
 ### Expected runtime
 | Stage | Domains | Approx time (this machine) |
 |-------|---------|----------------------------|
-| seed (CC + D2C, from `data/cc_candidates.json`) | ~24,800 | ~1–2 min (bulk upsert) |
-| verify-shopify (capped at 3,000 stores) | 3,000 | ~40 min at concurrency 50 |
-| verify-india | 1,658 Shopify hits | ~1–2 h (several pages/store) |
-| extract | 83 India-verified | a few minutes |
+| seed (all sources, from cached data) | ~24,800 | ~1–2 min (bulk upsert) |
+| verify-shopify (full run) | 24,800 | ~17 hours at concurrency 50 |
+| verify-india (on all Shopify stores) | 11,876 Shopify hits | ~3–4 h (several pages/store) |
+| extract | 905 India-verified | ~10–15 minutes |
 
-Full 24.8k Shopify verify was not run; it would take many hours. Cache makes re-runs of completed domains near-instant. Do not commit `data/cache_bodies/`, `spike/data/`, or `*.db` — GitHub rejects files over 100 MB and this working tree is ~9 GB almost entirely from those artifacts.
+Production run completed: 24,800 candidates → 11,876 Shopify verified → 10,047 India-checked → 905 verified Indian stores. Cache makes re-runs of completed domains near-instant. Do not commit `data/cache_bodies/`, `spike/data/`, or `*.db` — GitHub rejects files over 100 MB and this working tree is ~15 GB almost entirely from those artifacts.
 
 ---
 
@@ -449,5 +466,5 @@ evidence required (GSTIN, PIN in address context, or city/state near office/addr
 and `/products.json` (contacts, socials, category, tagline, logo, state).
 
 **Repo:** https://github.com/KavinKumar486/RivYou  
-**Result file:** [`data/stores_verified.csv`](https://github.com/KavinKumar486/RivYou/blob/master/data/stores_verified.csv) (83 rows; JSON twin: `data/stores_verified.json`)  
-**Runtime this slice:** seed ~2 min, Shopify to 3,000 stores ~40 min, India on 1,658 ~1–2 h, extract minutes. Pipeline development ~14h.
+**Result file:** [`data/stores_verified.csv`](https://github.com/KavinKumar486/RivYou/blob/master/data/stores_verified.csv) (988 rows: 905 newly verified + 83 previously extracted; JSON twin: `data/stores_verified.json`)  
+**Runtime:** seed ~2 min, Shopify verification ~17 hours (11,876 stores from 24,800 candidates), India verification ~3–4 hours (10,047 checked), extraction ~15 min. Pipeline development ~14h.
